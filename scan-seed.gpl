@@ -1,0 +1,44 @@
+cd "scan-seed"
+
+set xlabel "seed"
+
+set terminal pngcairo
+set output "scan-seed.png"
+
+load "../color/sequential/Blues.plt"
+# load "../color/qualitative/Paired.plt"
+
+set mxtics 10
+set mytics 10
+
+set key opaque box samplen 6 spacing 1.25
+
+set multiplot layout 2, 1
+
+# Position graphs exactly above each other
+set lmargin at screen 0.15
+
+# Upper graph
+set ytics 5
+set ylabel "x10^{3} / fb"
+set ytics format "%h"
+
+stats "scan-seed.dat" using 2 name "VAMP"
+stats "scan-seed_vamp2.dat" using 2 name "VAMP2"
+
+plot VAMP_mean - VAMP_ssd with filledcurve below y = VAMP_mean + VAMP_ssd notitle ls 6, \
+     VAMP_mean lt "black" notitle, \
+     "scan-seed.dat" using 1:2:3 with errorbars title "VAMP" ls 1, \
+     "scan-seed_vamp2.dat" using 1:2:3 with errorbars title "VAMP2" ls 4
+
+
+# Lower Graph
+unset logscale y
+set ylabel "\%"
+
+set ytics 0.01 format "%.2f" 
+set xzeroaxis
+
+norm_diff (x, y) = (x - y) / (x + y) * 1e2
+plot "<(../combine_results.sh scan-seed.dat scan-seed_vamp2.dat)" using 1:(norm_diff ($2, $3)) title "(x - y) / (x + y)" ls 6
+unset multiplot
