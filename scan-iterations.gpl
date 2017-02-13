@@ -1,0 +1,53 @@
+cd "scan-iterations"
+
+set terminal pngcairo
+set output "scan-iterations.png"
+
+load "../color/qualitative/Set2.plt"
+
+set mxtics 10
+set mytics 10
+
+set key opaque box
+
+set multiplot layout 2, 1 title "ee->mumu at 250 GeV"
+# Position graphs exactly above each other
+set lmargin at screen 0.15
+
+# Upper graph
+stats "scan-iterations.dat" using 2 name "VAMP"
+stats "scan-iterations_vamp2.dat" using 2 name "VAMP2"
+stats "scan-iterations.dat" using 3 name "VAMPerror"
+stats "scan-iterations_vamp2.dat" using 3 name "VAMP2error"
+
+set logscale x
+set ytics 25
+set ylabel "x10^{3} / fb"
+set ytics format "%h"
+set xtics format ""
+
+set bmargin 0
+
+plot VAMP_mean - VAMP_ssd with filledcurve below y = VAMP_mean + VAMP_ssd notitle ls 1, \
+     VAMP_mean lt "black" notitle, \
+     "scan-iterations_vamp2.dat" using 1:2:3 with errorbars title "VAMP2" ls 3, \
+     "scan-iterations.dat" using 1:2:3 with errorbars title "VAMP" ls 2
+
+set tmargin 0
+
+# Lower Graph
+set ytics 1e-4,0.1,5
+set logscale y
+set ytics format "%h"
+set xtics format "%h"
+
+set ylabel "normalised error"
+set xlabel "iterations"
+
+set bmargin 4
+
+plot "scan-iterations.dat" using 1:($3 / VAMPerror_max) title "VAMP" ls 4, \
+     "scan-iterations_vamp2.dat" using 1:($3 / VAMP2error_max) title "VAMP2" ls 5, \
+     1 / sqrt(x - 1) ls 6 title "$1/sqrt{N - 1}$"
+
+unset multiplot
