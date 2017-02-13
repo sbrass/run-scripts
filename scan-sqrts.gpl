@@ -1,0 +1,46 @@
+cd "scan-sqrts"
+
+set terminal pngcairo
+set output "scan-sqrts.png"
+
+set mxtics 10
+set key opaque box samplen 6 spacing 1.25
+
+set multiplot layout 2, 1 title "ee->mumu Z lineshape"
+
+# Position graphs exactly above each other
+set lmargin at screen 0.15
+
+# Upper graph
+set ylabel "x10^{3} / fb"
+set logscale y
+set ytics format "%h"
+set xtics format ""
+
+set bmargin 0
+
+alpha_em = 1.325049458125E+02
+m_mu = 1.056583890000E-01
+sigma_t(x) = (4 * pi / 3 * alpha_em**2 / x**2 ) \
+           * sqrt(1 - m_mu**2 / x**2) * (1 + 0.5 * m_mu**2 / x**2)
+
+plot "scan-sqrts.dat" using 1:2:3 with errorbars title "VAMP", \
+     "scan-sqrts_vamp2.dat" using 1:2:3 with errorbars title "VAMP2", \
+     sigma_t(x) title "QED"
+
+set tmargin 0
+set bmargin 4
+# Lower Graph
+unset logscale y
+
+set ylabel "\%"
+set xlabel '\sqrt{s} / GeV'
+
+set ytics 0.015 format "%.2f"
+set xtics format "%h"
+set mytics 10
+set xzeroaxis
+
+norm_diff (x, y) = (x - y) / (x + y) * 1e2
+plot "<(../combine_results.sh scan-sqrts.dat scan-sqrts_vamp2.dat)" using 1:(norm_diff ($2, $3)) title "(x - y) / (x + y)"
+unset multiplot
